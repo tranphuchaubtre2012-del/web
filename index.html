@@ -173,220 +173,148 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // CẤU HÌNH FIREBASE CỦA BẠN
-        const firebaseConfig = {
-            apiKey: "AIzaSyCCAF5yZ5tyGGleUXI6f96uwg1td4Z9yac",
-            authDomain: "thu-phap-phuc-au.firebaseapp.com",
-            projectId: "thu-phap-phuc-au",
-            storageBucket: "thu-phap-phuc-au.firebasestorage.app",
-            messagingSenderId: "454694331928",
-            appId: "1:454694331928:web:64910acaca2e5cf101456d",
-            measurementId: "G-MTZRFLH1QG",
-            // Lưu ý: Cần databaseURL để Realtime Database hoạt động
-            databaseURL: "https://thu-phap-phuc-au-default-rtdb.asia-southeast1.firebasedatabase.app/"
-        };
+        // --- GIỮ NGUYÊN PHẦN CẤU HÌNH FIREBASE CỦA BẠN Ở ĐÂY ---
+// const firebaseConfig = { ... };
+// firebase.initializeApp(firebaseConfig);
+// const database = firebase.database();
 
-        // Khởi tạo Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        const ADMIN_EMAILS = ["tranphuchaubtre2012@gmail.com", "thuphapphuchau@gmail.com"];
-        let base64Image = "";
-        let currentGeneratedOTP = null;
-
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            window.scrollTo(0,0);
+// --- HÀM TẢI BÀI VIẾT (CẬP NHẬT MỚI) ---
+function loadPosts() {
+    const feed = document.getElementById('forum-feed');
+    
+    database.ref('forum_posts').orderByChild('timestamp').on('value', (snapshot) => {
+        const postsData = snapshot.val();
+        if(!postsData) {
+            feed.innerHTML = `<p class="text-center italic text-stone-400">Chưa có bài viết nào...</p>`;
+            return;
         }
 
-        function scrollToAbout() {
-            showPage('home-page');
-            setTimeout(() => {
-                const aboutSection = document.getElementById('about');
-                if (aboutSection) aboutSection.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-        }
+        let html = "";
+        const keys = Object.keys(postsData).reverse();
 
-        function previewImg(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    base64Image = e.target.result;
-                    document.getElementById('img-show').src = base64Image;
-                    document.getElementById('img-show').classList.remove('hidden');
-                    document.getElementById('img-hint').classList.add('hidden');
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
+        keys.forEach(key => {
+            const p = postsData[key];
+            const likeCount = p.likes ? Object.keys(p.likes).length : 0;
+            const commentCount = p.comments ? Object.keys(p.comments).length : 0;
 
-        // --- HÀM LƯU BÀI VIẾT LÊN FIREBASE ---
-        function savePost() {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const title = document.getElementById('postTitle').value;
-            const content = document.getElementById('postContent').value;
-            if (!title || !content) { alert("Vui lòng điền đủ thông tin!"); return; }
-
-            const newPost = {
-                author: user.displayName,
-                role: user.role,
-                title: title,
-                content: content,
-                image: base64Image,
-                date: new Date().toLocaleString('vi-VN'),
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            // Đẩy lên Firebase Realtime Database
-            database.ref('forum_posts').push(newPost)
-            .then(() => {
-                // Reset form sau khi gửi thành công
-                document.getElementById('postTitle').value = "";
-                document.getElementById('postContent').value = "";
-                document.getElementById('img-show').classList.add('hidden');
-                document.getElementById('img-hint').classList.remove('hidden');
-                base64Image = "";
-            })
-            .catch(error => alert("Lỗi khi đăng bài: " + error.message));
-        }
-
-        // --- HÀM TỰ ĐỘNG CẬP NHẬT BÀI VIẾT TỪ FIREBASE ---
-        function loadPosts() {
-            const feed = document.getElementById('forum-feed');
-            
-            // Lắng nghe sự thay đổi trên Firebase (Realtime)
-            database.ref('forum_posts').orderByChild('timestamp').on('value', (snapshot) => {
-                const postsData = snapshot.val();
-                if(!postsData) {
-                    feed.innerHTML = `<p class="text-center italic text-stone-400">Chưa có bài viết nào trên diễn đàn...</p>`;
-                    return;
-                }
-
-                // Chuyển object sang array và đảo ngược để bài mới ở trên đầu
-                const postsArray = Object.values(postsData).reverse();
-
-                feed.innerHTML = postsArray.map(p => `
-                    <div class="post-card p-8 border border-stone-100 shadow-sm bg-white mb-6">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <span class="text-[10px] font-bold uppercase text-red-700">${p.role}</span>
-                                <h4 class="font-bold text-sm">${p.author}</h4>
-                            </div>
-                            <span class="text-[9px] text-stone-400">${p.date}</span>
+            html += `
+                <div class="post-card p-6 border border-stone-100 shadow-sm bg-white mb-6 cursor-pointer" onclick="openPostDetail('${key}')">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-red-700">${p.role || 'Thành viên'}</span>
+                            <h4 class="font-bold text-sm">${p.author}</h4>
                         </div>
-                        <h3 class="text-xl font-serif text-stone-900 mb-3">${p.title}</h3>
-                        <p class="text-sm text-stone-600 leading-relaxed mb-4">${p.content}</p>
-                        ${p.image ? `<img src="${p.image}" class="w-full h-auto max-h-96 object-cover rounded-sm border border-stone-100">` : ''}
+                        <span class="text-[9px] text-stone-400">${p.date}</span>
                     </div>
-                `).join('');
-            });
-        }
+                    <h3 class="text-xl font-serif text-stone-900 mb-2">${p.title}</h3>
+                    <p class="text-sm text-stone-600 line-clamp-3 mb-4">${p.content}</p>
+                    ${p.image ? `<img src="${p.image}" class="w-full h-48 object-cover rounded-sm mb-4">` : ''}
+                    
+                    <div class="flex gap-6 border-t pt-4 text-[11px] font-bold uppercase tracking-widest text-stone-400">
+                        <span class="hover:text-red-700">❤️ ${likeCount} Thích</span>
+                        <span class="hover:text-red-700">💬 ${commentCount} Bình luận</span>
+                    </div>
+                </div>
+            `;
+        });
+        feed.innerHTML = html;
+    });
+}
 
-        // (CÁC HÀM XÁC THỰC EMAILJS VÀ USER GIỮ NGUYÊN)
-        function validateEmailFormat() {
-            const email = document.getElementById('regEmail').value.trim();
-            const btn = document.getElementById('btnSendOTP');
-            const emailPattern = /^[^\s@]+@[^\s@]+\.(com|vn|net|org|edu|gov|outlook\.com|gmail\.com)$/i;
-            if (emailPattern.test(email)) {
-                btn.disabled = false;
-                btn.classList.remove('text-stone-400');
-                btn.classList.add('text-red-700');
-            } else {
-                btn.disabled = true;
-                btn.classList.remove('text-red-700');
-                btn.classList.add('text-stone-400');
-            }
-        }
+// --- TÍNH NĂNG XEM CHI TIẾT & BÌNH LUẬN ---
+function openPostDetail(postId) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    
+    database.ref('forum_posts/' + postId).once('value', (snapshot) => {
+        const p = snapshot.val();
+        const likeCount = p.likes ? Object.keys(p.likes).length : 0;
+        
+        // Tạo Modal chi tiết
+        const detailHtml = `
+            <div id="post-detail-modal" class="modal active" style="z-index: 200;">
+                <div class="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-sm relative p-8">
+                    <button onclick="closeDetail()" class="fixed top-5 right-5 text-3xl text-white font-light">&times;</button>
+                    
+                    <div class="mb-6">
+                        <span class="text-xs font-bold text-red-700 uppercase">${p.role}</span>
+                        <h2 class="text-3xl font-serif mt-2">${p.title}</h2>
+                        <p class="text-[10px] text-stone-400 mt-1">${p.author} • ${p.date}</p>
+                    </div>
 
-        async function sendOTP() {
-            const email = document.getElementById('regEmail').value.trim().toLowerCase();
-            const btn = document.getElementById('btnSendOTP');
-            currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000);
-            btn.innerText = "Đang gửi...";
-            btn.disabled = true;
-            try {
-                await emailjs.send("service_ptpjjri", "template_7vnpsf6", { 
-                    to_email: email, 
-                    user_name: document.getElementById('regUser').value || "bạn",
-                    otp: currentGeneratedOTP 
-                });
-                alert("Mã xác thực đã được gửi đến " + email);
-                btn.innerText = "Đã gửi";
-            } catch (err) {
-                alert("Lỗi gửi mail!");
-                btn.innerText = "Thử lại";
-                btn.disabled = false;
-            }
-        }
+                    ${p.image ? `<img src="${p.image}" class="w-full h-auto mb-6 rounded-sm shadow-lg">` : ''}
+                    
+                    <p class="text-stone-700 leading-relaxed mb-8 whitespace-pre-wrap">${p.content}</p>
 
-        async function handleRegister(e) {
-            e.preventDefault();
-            const email = document.getElementById('regEmail').value.trim().toLowerCase();
-            const name = document.getElementById('regUser').value.trim();
-            const pass = document.getElementById('regPass').value;
-            const inputOTP = document.getElementById('regOTP').value;
+                    <div class="border-t pt-6">
+                        <button onclick="handleLike('${postId}')" class="bg-stone-100 px-6 py-2 rounded-full text-xs font-bold uppercase hover:bg-red-50 hover:text-red-700 transition">
+                            ❤️ Thích (${likeCount})
+                        </button>
+                    </div>
 
-            if (!currentGeneratedOTP || inputOTP != currentGeneratedOTP) {
-                alert("Mã OTP không chính xác!");
-                return;
-            }
+                    <div class="mt-10">
+                        <h4 class="font-serif text-lg mb-4">Bình luận</h4>
+                        <div id="comment-list" class="space-y-4 mb-6">
+                            ${renderComments(p.comments)}
+                        </div>
+                        
+                        ${user ? `
+                            <div class="flex gap-2">
+                                <input type="text" id="cmt-input" placeholder="Viết bình luận..." class="flex-1 border-b py-2 text-sm outline-none">
+                                <button onclick="sendComment('${postId}')" class="bg-black text-white px-4 py-2 text-[10px] font-bold uppercase">Gửi</button>
+                            </div>
+                        ` : '<p class="text-xs italic text-stone-400">Đăng nhập để bình luận</p>'}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', detailHtml);
+    });
+}
 
-            let users = JSON.parse(localStorage.getItem('all_users') || "[]");
-            if(users.some(u => u.displayName.toLowerCase() === name.toLowerCase())) {
-                alert("Tên đã được sử dụng!");
-                return;
-            }
+function renderComments(comments) {
+    if (!comments) return '<p class="text-xs italic text-stone-400">Chưa có bình luận nào.</p>';
+    return Object.values(comments).map(c => `
+        <div class="bg-stone-50 p-3 rounded-sm">
+            <p class="text-[10px] font-bold text-stone-900">${c.author} <span class="font-normal text-stone-400 ml-2">${c.date}</span></p>
+            <p class="text-sm text-stone-600 mt-1">${c.text}</p>
+        </div>
+    `).join('');
+}
 
-            const user = { displayName: name, email: email, password: pass, role: ADMIN_EMAILS.includes(email) ? 'Admin' : 'Thành viên' };
-            users.push(user);
-            localStorage.setItem('all_users', JSON.stringify(users));
-            localStorage.setItem('user', JSON.stringify(user));
-            alert("Đăng ký thành công!");
-            location.reload();
-        }
+function handleLike(postId) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if(!user) return alert("Vui lòng đăng nhập để thích bài viết!");
+    
+    // Lưu lượt thích theo tên người dùng để không bị trùng
+    database.ref('forum_posts/' + postId + '/likes/' + user.displayName).set(true);
+    closeDetail(); // Đóng để cập nhật lại giao diện (hoặc viết hàm update nhỏ hơn)
+    openPostDetail(postId);
+}
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-            const pass = document.getElementById('loginPass').value;
-            const users = JSON.parse(localStorage.getItem('all_users') || "[]");
-            const found = users.find(u => u.email === email && u.password === pass);
-            if(found) { localStorage.setItem('user', JSON.stringify(found)); location.reload(); }
-            else alert("Sai tài khoản!");
-        }
+function sendComment(postId) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const text = document.getElementById('cmt-input').value;
+    if(!text) return;
 
-        function logout() { localStorage.removeItem('user'); location.reload(); }
-        function openProfile() { openModal('profile-modal'); }
+    const newComment = {
+        author: user.displayName,
+        text: text,
+        date: new Date().toLocaleTimeString('vi-VN') + " " + new Date().toLocaleDateString('vi-VN')
+    };
 
-        function deleteAccount() {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (confirm("Bạn có chắc chắn muốn xóa tài khoản không?")) {
-                let users = JSON.parse(localStorage.getItem('all_users') || "[]");
-                users = users.filter(u => u.email !== user.email);
-                localStorage.setItem('all_users', JSON.stringify(users));
-                localStorage.removeItem('user');
-                location.reload();
-            }
-        }
+    database.ref('forum_posts/' + postId + '/comments').push(newComment)
+    .then(() => {
+        document.getElementById('cmt-input').value = "";
+        // Cập nhật danh sách bình luận ngay lập tức
+        closeDetail();
+        openPostDetail(postId);
+    });
+}
 
-        window.onload = function() {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (user) {
-                document.getElementById('auth-section').classList.add('hidden');
-                document.getElementById('user-section').classList.remove('hidden');
-                document.getElementById('display-name').innerText = user.displayName;
-                document.getElementById('user-role').innerText = user.role;
-                document.getElementById('p-name').innerText = user.displayName;
-                document.getElementById('p-role').innerText = user.role;
-                document.getElementById('forum-auth-notice').classList.add('hidden');
-                document.getElementById('forum-post-area').classList.remove('hidden');
-            }
-            loadPosts(); // Luôn gọi hàm này để tải bài từ Firebase
-        };
+function closeDetail() {
+    const modal = document.getElementById('post-detail-modal');
+    if(modal) modal.remove();
+}
     </script>
 </body>
 </html>
