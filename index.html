@@ -169,7 +169,27 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script>
+        // CẤU HÌNH FIREBASE CỦA BẠN
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCAF5yZ5tyGGleUXI6f96uwg1td4Z9yac",
+            authDomain: "thu-phap-phuc-au.firebaseapp.com",
+            projectId: "thu-phap-phuc-au",
+            storageBucket: "thu-phap-phuc-au.firebasestorage.app",
+            messagingSenderId: "454694331928",
+            appId: "1:454694331928:web:64910acaca2e5cf101456d",
+            measurementId: "G-MTZRFLH1QG",
+            // Lưu ý: Cần databaseURL để Realtime Database hoạt động
+            databaseURL: "https://thu-phap-phuc-au-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+
+        // Khởi tạo Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         const ADMIN_EMAILS = ["tranphuchaubtre2012@gmail.com", "thuphapphuchau@gmail.com"];
         let base64Image = "";
         let currentGeneratedOTP = null;
@@ -204,6 +224,7 @@
             }
         }
 
+        // --- HÀM LƯU BÀI VIẾT LÊN FIREBASE ---
         function savePost() {
             const user = JSON.parse(localStorage.getItem('user'));
             const title = document.getElementById('postTitle').value;
@@ -211,55 +232,65 @@
             if (!title || !content) { alert("Vui lòng điền đủ thông tin!"); return; }
 
             const newPost = {
-                id: Date.now(),
                 author: user.displayName,
                 role: user.role,
                 title: title,
                 content: content,
                 image: base64Image,
-                date: new Date().toLocaleString('vi-VN')
+                date: new Date().toLocaleString('vi-VN'),
+                timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
-            let posts = JSON.parse(localStorage.getItem('forum_posts') || "[]");
-            posts.unshift(newPost);
-            localStorage.setItem('forum_posts', JSON.stringify(posts));
-            
-            document.getElementById('postTitle').value = "";
-            document.getElementById('postContent').value = "";
-            document.getElementById('img-show').classList.add('hidden');
-            document.getElementById('img-hint').classList.remove('hidden');
-            base64Image = "";
-            loadPosts();
+            // Đẩy lên Firebase Realtime Database
+            database.ref('forum_posts').push(newPost)
+            .then(() => {
+                // Reset form sau khi gửi thành công
+                document.getElementById('postTitle').value = "";
+                document.getElementById('postContent').value = "";
+                document.getElementById('img-show').classList.add('hidden');
+                document.getElementById('img-hint').classList.remove('hidden');
+                base64Image = "";
+            })
+            .catch(error => alert("Lỗi khi đăng bài: " + error.message));
         }
 
+        // --- HÀM TỰ ĐỘNG CẬP NHẬT BÀI VIẾT TỪ FIREBASE ---
         function loadPosts() {
             const feed = document.getElementById('forum-feed');
-            const posts = JSON.parse(localStorage.getItem('forum_posts') || "[]");
-            if(posts.length === 0) {
-                feed.innerHTML = `<p class="text-center italic text-stone-400">Chưa có bài viết nào trên diễn đàn...</p>`;
-                return;
-            }
-            feed.innerHTML = posts.map(p => `
-                <div class="post-card p-8 border border-stone-100 shadow-sm bg-white mb-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <span class="text-[10px] font-bold uppercase text-red-700">${p.role}</span>
-                            <h4 class="font-bold text-sm">${p.author}</h4>
+            
+            // Lắng nghe sự thay đổi trên Firebase (Realtime)
+            database.ref('forum_posts').orderByChild('timestamp').on('value', (snapshot) => {
+                const postsData = snapshot.val();
+                if(!postsData) {
+                    feed.innerHTML = `<p class="text-center italic text-stone-400">Chưa có bài viết nào trên diễn đàn...</p>`;
+                    return;
+                }
+
+                // Chuyển object sang array và đảo ngược để bài mới ở trên đầu
+                const postsArray = Object.values(postsData).reverse();
+
+                feed.innerHTML = postsArray.map(p => `
+                    <div class="post-card p-8 border border-stone-100 shadow-sm bg-white mb-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase text-red-700">${p.role}</span>
+                                <h4 class="font-bold text-sm">${p.author}</h4>
+                            </div>
+                            <span class="text-[9px] text-stone-400">${p.date}</span>
                         </div>
-                        <span class="text-[9px] text-stone-400">${p.date}</span>
+                        <h3 class="text-xl font-serif text-stone-900 mb-3">${p.title}</h3>
+                        <p class="text-sm text-stone-600 leading-relaxed mb-4">${p.content}</p>
+                        ${p.image ? `<img src="${p.image}" class="w-full h-auto max-h-96 object-cover rounded-sm border border-stone-100">` : ''}
                     </div>
-                    <h3 class="text-xl font-serif text-stone-900 mb-3">${p.title}</h3>
-                    <p class="text-sm text-stone-600 leading-relaxed mb-4">${p.content}</p>
-                    ${p.image ? `<img src="${p.image}" class="w-full h-auto max-h-96 object-cover rounded-sm border border-stone-100">` : ''}
-                </div>
-            `).join('');
+                `).join('');
+            });
         }
 
+        // (CÁC HÀM XÁC THỰC EMAILJS VÀ USER GIỮ NGUYÊN)
         function validateEmailFormat() {
             const email = document.getElementById('regEmail').value.trim();
             const btn = document.getElementById('btnSendOTP');
             const emailPattern = /^[^\s@]+@[^\s@]+\.(com|vn|net|org|edu|gov|outlook\.com|gmail\.com)$/i;
-            
             if (emailPattern.test(email)) {
                 btn.disabled = false;
                 btn.classList.remove('text-stone-400');
@@ -277,7 +308,6 @@
             currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000);
             btn.innerText = "Đang gửi...";
             btn.disabled = true;
-
             try {
                 await emailjs.send("service_ptpjjri", "template_7vnpsf6", { 
                     to_email: email, 
@@ -355,7 +385,7 @@
                 document.getElementById('forum-auth-notice').classList.add('hidden');
                 document.getElementById('forum-post-area').classList.remove('hidden');
             }
-            loadPosts();
+            loadPosts(); // Luôn gọi hàm này để tải bài từ Firebase
         };
     </script>
 </body>
