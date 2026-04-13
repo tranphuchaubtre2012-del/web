@@ -33,8 +33,10 @@
         .modal.active { display: flex; }
         .page-section { display: none; }
         .page-section.active { display: block; }
-        .post-card { background: white; border: 1px border-stone-200; transition: transform 0.3s; }
-        .post-card:hover { transform: translateY(-5px); }
+        .post-card { background: white; border: 1px solid #e5e7eb; transition: transform 0.3s, box-shadow 0.3s; }
+        .post-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        #post-detail-modal .bg-white { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -42,7 +44,7 @@
 
     <nav class="p-4 flex justify-between items-center border-b border-stone-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
         <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('home-page')">
-            <img src="https://i.ibb.co/XrPjtCSs/n-Tri-n-Vu-ng.jpg" alt="Logo Thư Pháp Phúc Hậu" class="w-10 h-10 object-cover shadow-sm">
+            <img src="https://i.ibb.co/XrPjtCSs/n-Tri-n-Vu-ng.jpg" alt="Logo" class="w-10 h-10 object-cover shadow-sm">
             <div class="text-xl font-bold tracking-tighter uppercase">Thư Pháp <span class="text-red-700">Phúc Hậu</span></div>
         </div>
         
@@ -78,7 +80,7 @@
         <section class="min-h-[85vh] flex flex-col items-center justify-center text-center px-6">
             <div class="relative mb-10">
                 <div class="absolute inset-0 bg-red-700 rounded-full blur-3xl opacity-10"></div>
-                <img src="https://i.ibb.co/XrPjtCSs/n-Tri-n-Vu-ng.jpg" alt="Ấn Triện Thư Pháp Phúc Hậu" class="w-40 h-40 mx-auto rounded-full border-4 border-white shadow-2xl relative z-10 object-cover">
+                <img src="https://i.ibb.co/XrPjtCSs/n-Tri-n-Vu-ng.jpg" class="w-40 h-40 mx-auto rounded-full border-4 border-white shadow-2xl relative z-10 object-cover">
             </div>
             <h1 class="text-6xl md:text-8xl mb-6 text-stone-900 font-serif">Thư Pháp Phúc Hậu</h1>
             <p class="text-stone-500 italic text-xl max-w-2xl mx-auto font-light leading-relaxed">"Nét Chữ - Nét Người"</p>
@@ -86,12 +88,12 @@
 
         <section id="about" class="py-24 bg-stone-100/50">
             <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
-                <img src="https://i.ibb.co/XrPjtCSs/n-Tri-n-Vu-ng.jpg" alt="Nghệ thuật Thư Pháp Việt" class="w-full h-[500px] object-cover shadow-2xl">
+                <img src="https://i.ibb.co/XrPjtCSs/n-Tri-n-Vu-ng.jpg" class="w-full h-[500px] object-cover shadow-2xl">
                 <div class="space-y-5">
                     <h2 class="text-5xl font-serif text-stone-900">Về Thư Pháp Phúc Hậu</h2>
                     <div class="w-16 h-1 bg-red-800"></div>
                     <p class="text-stone-600 leading-relaxed">Khởi nguồn từ niềm đam mê với những nét chữ mềm mại của Quốc ngữ tại quê hương Bến Tre, Thư pháp Phúc Hậu quan niệm Thư Pháp không chỉ là việc viết chữ đẹp, mà là quá trình rèn luyện tâm tính.</p> 
-                    <p class="text-stone-600 leading-relaxed">Mỗi tác phẩm đều mang một câu chuyện, một ý nghĩa sâu sắc, hướng con người tới cái Chân - Thiện - Mỹ. Thư Pháp Phúc Hậu cũng quan niệm rằng "Nét Chữ là Nét Người".</p>
+                    <p class="text-stone-600 leading-relaxed">Mỗi tác phẩm đều mang một câu chuyện, một ý nghĩa sâu sắc, hướng con người tới cái Chân - Thiện - Mỹ.</p>
                 </div>
             </div>
         </section>
@@ -108,44 +110,24 @@
         <div id="forum-post-area" class="hidden bg-white p-8 shadow-xl rounded-sm mb-12 border border-stone-100">
             <h3 class="font-serif text-xl mb-6">Tạo bài viết mới</h3>
             <div class="space-y-4">
-                <div class="border-2 border-dashed border-stone-200 p-4 text-center cursor-pointer hover:bg-stone-50" onclick="document.getElementById('postImg').click()">
-                    <input type="file" id="postImg" accept="image/*" class="hidden" onchange="previewImg(this)">
-                    <p id="img-hint" class="text-[10px] uppercase font-bold text-stone-400">Gán ảnh chia sẻ (Tùy chọn)</p>
-                    <img id="img-show" class="hidden max-h-48 mx-auto rounded-sm mt-2">
-                </div>
                 <input type="text" id="postTitle" placeholder="Tiêu đề bài viết..." class="w-full border-b py-3 outline-none text-sm font-bold">
                 <textarea id="postContent" placeholder="Bạn đang nghĩ gì về thư pháp?" class="w-full border-b py-3 outline-none text-sm h-24 resize-none"></textarea>
                 <button onclick="savePost()" class="bg-red-800 text-white px-8 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-black transition">Đăng bài ngay</button>
             </div>
         </div>
-        <div id="forum-feed" class="space-y-10"></div>
+        <div id="forum-feed" class="space-y-6"></div>
     </main>
+
+    <div id="post-detail-container"></div>
 
     <footer class="bg-stone-950 py-16 px-6 text-center">
         <div class="text-red-700 font-serif font-bold text-2xl mb-1">Thư Pháp Phúc Hậu</div>
         <div class="text-white font-serif font-semibold text-xl mb-4">Hotline - Zalo: 0795719602</div>
-        <p class="text-stone-400 uppercase tracking-[0.4em] text-[10px] mb-4">© 2026 Trần Phúc Hậu</p>
+        <p class="text-stone-400 uppercase tracking-[0.4em] text-[10px]">© 2026 Trần Phúc Hậu</p>
     </footer>
 
-    <div id="register-modal" class="modal">
-        <div class="bg-white p-10 rounded-sm w-full max-w-md relative">
-            <button onclick="closeModal('register-modal')" class="absolute top-4 right-4 text-2xl">&times;</button>
-            <h2 class="text-2xl mb-4 font-serif text-center uppercase">Đăng ký</h2>
-            <form onsubmit="handleRegister(event)" class="space-y-4">
-                <input type="text" id="regUser" placeholder="Tên đăng nhập" class="w-full border-b py-2 text-sm outline-none" required>
-                <div class="flex gap-2 items-end border-b">
-                    <input type="email" id="regEmail" placeholder="Email" class="flex-1 py-2 text-sm outline-none" oninput="validateEmailFormat()" required>
-                    <button type="button" id="btnSendOTP" onclick="sendOTP()" disabled class="text-[10px] font-bold uppercase text-stone-400 pb-2 transition-colors disabled:cursor-not-allowed">Gửi mã</button>
-                </div>
-                <input type="number" id="regOTP" placeholder="Mã xác nhận" class="w-full border-b py-2 text-sm outline-none" required>
-                <input type="password" id="regPass" placeholder="Mật khẩu" class="w-full border-b py-2 text-sm outline-none" required>
-                <button type="submit" class="w-full bg-red-800 text-white py-4 text-[10px] font-bold uppercase mt-4 hover:bg-black transition">Hoàn tất Đăng ký</button>
-            </form>
-        </div>
-    </div>
-
     <div id="login-modal" class="modal">
-        <div class="bg-white p-10 rounded-sm w-full max-w-sm relative shadow-2xl">
+        <div class="bg-white p-10 rounded-sm w-full max-w-sm relative">
             <button onclick="closeModal('login-modal')" class="absolute top-4 right-4 text-2xl">&times;</button>
             <h2 class="text-2xl mb-8 font-serif text-center uppercase">Đăng nhập</h2>
             <form onsubmit="handleLogin(event)" class="space-y-5">
@@ -156,165 +138,178 @@
         </div>
     </div>
 
-    <div id="profile-modal" class="modal">
-        <div class="bg-white p-10 rounded-sm w-full max-w-md relative text-center">
-            <button onclick="closeModal('profile-modal')" class="absolute top-4 right-4 text-2xl">&times;</button>
-            <div class="w-20 h-20 bg-stone-100 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl">👤</div>
-            <h2 class="text-xl font-serif" id="p-name"></h2>
-            <p id="p-role" class="text-[10px] text-red-700 font-bold mb-6"></p>
-            <div class="flex flex-col gap-3">
-                <button onclick="logout()" class="w-full text-black text-[10px] font-bold border border-stone-300 px-6 py-3 uppercase hover:bg-stone-50 transition">Đăng xuất</button>
-                <button onclick="deleteAccount()" class="w-full text-red-600 text-[10px] font-bold border border-red-200 px-6 py-3 uppercase hover:bg-red-50 transition">Xóa tài khoản</button>
-            </div>
-        </div>
-    </div>
-
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // --- GIỮ NGUYÊN PHẦN CẤU HÌNH FIREBASE CỦA BẠN Ở ĐÂY ---
-// const firebaseConfig = { ... };
-// firebase.initializeApp(firebaseConfig);
-// const database = firebase.database();
+        // --- 1. CẤU HÌNH FIREBASE (Dán mã của bạn vào đây) ---
+        const firebaseConfig = {
+            apiKey: "AIza...", 
+            authDomain: "tranphuchaubtre2012-del.firebaseapp.com",
+            databaseURL: "https://tranphuchaubtre2012-del-default-rtdb.firebaseio.com",
+            projectId: "tranphuchaubtre2012-del",
+            storageBucket: "tranphuchaubtre2012-del.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-// --- HÀM TẢI BÀI VIẾT (CẬP NHẬT MỚI) ---
-function loadPosts() {
-    const feed = document.getElementById('forum-feed');
-    
-    database.ref('forum_posts').orderByChild('timestamp').on('value', (snapshot) => {
-        const postsData = snapshot.val();
-        if(!postsData) {
-            feed.innerHTML = `<p class="text-center italic text-stone-400">Chưa có bài viết nào...</p>`;
-            return;
+        // --- 2. HÀM ĐIỀU HƯỚNG CƠ BẢN ---
+        function showPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if(pageId === 'forum-page') loadPosts();
+            window.scrollTo(0,0);
         }
 
-        let html = "";
-        const keys = Object.keys(postsData).reverse();
-
-        keys.forEach(key => {
-            const p = postsData[key];
-            const likeCount = p.likes ? Object.keys(p.likes).length : 0;
-            const commentCount = p.comments ? Object.keys(p.comments).length : 0;
-
-            html += `
-                <div class="post-card p-6 border border-stone-100 shadow-sm bg-white mb-6 cursor-pointer" onclick="openPostDetail('${key}')">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <span class="text-[10px] font-bold uppercase text-red-700">${p.role || 'Thành viên'}</span>
-                            <h4 class="font-bold text-sm">${p.author}</h4>
-                        </div>
-                        <span class="text-[9px] text-stone-400">${p.date}</span>
-                    </div>
-                    <h3 class="text-xl font-serif text-stone-900 mb-2">${p.title}</h3>
-                    <p class="text-sm text-stone-600 line-clamp-3 mb-4">${p.content}</p>
-                    ${p.image ? `<img src="${p.image}" class="w-full h-48 object-cover rounded-sm mb-4">` : ''}
-                    
-                    <div class="flex gap-6 border-t pt-4 text-[11px] font-bold uppercase tracking-widest text-stone-400">
-                        <span class="hover:text-red-700">❤️ ${likeCount} Thích</span>
-                        <span class="hover:text-red-700">💬 ${commentCount} Bình luận</span>
-                    </div>
-                </div>
-            `;
-        });
-        feed.innerHTML = html;
-    });
-}
-
-// --- TÍNH NĂNG XEM CHI TIẾT & BÌNH LUẬN ---
-function openPostDetail(postId) {
-    const user = JSON.parse(localStorage.getItem('user'));
-    
-    database.ref('forum_posts/' + postId).once('value', (snapshot) => {
-        const p = snapshot.val();
-        const likeCount = p.likes ? Object.keys(p.likes).length : 0;
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
         
-        // Tạo Modal chi tiết
-        const detailHtml = `
-            <div id="post-detail-modal" class="modal active" style="z-index: 200;">
-                <div class="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-sm relative p-8">
-                    <button onclick="closeDetail()" class="fixed top-5 right-5 text-3xl text-white font-light">&times;</button>
-                    
-                    <div class="mb-6">
-                        <span class="text-xs font-bold text-red-700 uppercase">${p.role}</span>
-                        <h2 class="text-3xl font-serif mt-2">${p.title}</h2>
-                        <p class="text-[10px] text-stone-400 mt-1">${p.author} • ${p.date}</p>
-                    </div>
+        function scrollToAbout() {
+            showPage('home-page');
+            setTimeout(() => document.getElementById('about').scrollIntoView(), 100);
+        }
 
-                    ${p.image ? `<img src="${p.image}" class="w-full h-auto mb-6 rounded-sm shadow-lg">` : ''}
-                    
-                    <p class="text-stone-700 leading-relaxed mb-8 whitespace-pre-wrap">${p.content}</p>
-
-                    <div class="border-t pt-6">
-                        <button onclick="handleLike('${postId}')" class="bg-stone-100 px-6 py-2 rounded-full text-xs font-bold uppercase hover:bg-red-50 hover:text-red-700 transition">
-                            ❤️ Thích (${likeCount})
-                        </button>
-                    </div>
-
-                    <div class="mt-10">
-                        <h4 class="font-serif text-lg mb-4">Bình luận</h4>
-                        <div id="comment-list" class="space-y-4 mb-6">
-                            ${renderComments(p.comments)}
-                        </div>
-                        
-                        ${user ? `
-                            <div class="flex gap-2">
-                                <input type="text" id="cmt-input" placeholder="Viết bình luận..." class="flex-1 border-b py-2 text-sm outline-none">
-                                <button onclick="sendComment('${postId}')" class="bg-black text-white px-4 py-2 text-[10px] font-bold uppercase">Gửi</button>
+        // --- 3. LOGIC DIỄN ĐÀN (LIKE, CMT, VIEW) ---
+        function loadPosts() {
+            const feed = document.getElementById('forum-feed');
+            database.ref('forum_posts').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(!data) {
+                    feed.innerHTML = `<p class="text-center italic text-stone-400">Chưa có bài viết nào...</p>`;
+                    return;
+                }
+                let html = "";
+                Object.keys(data).reverse().forEach(key => {
+                    const p = data[key];
+                    const likes = p.likes ? Object.keys(p.likes).length : 0;
+                    const cmts = p.comments ? Object.keys(p.comments).length : 0;
+                    html += `
+                        <div class="post-card p-6 cursor-pointer" onclick="openPostDetail('${key}')">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-[9px] font-bold uppercase text-red-700">${p.role || 'Thành viên'}</span>
+                                <span class="text-[9px] text-stone-400">${p.date}</span>
                             </div>
-                        ` : '<p class="text-xs italic text-stone-400">Đăng nhập để bình luận</p>'}
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', detailHtml);
-    });
-}
+                            <h3 class="text-xl font-serif mb-2">${p.title}</h3>
+                            <p class="text-sm text-stone-600 line-clamp-2 mb-4">${p.content}</p>
+                            <div class="flex gap-4 text-[10px] font-bold text-stone-400 uppercase">
+                                <span>❤️ ${likes}</span> <span>💬 ${cmts}</span>
+                            </div>
+                        </div>`;
+                });
+                feed.innerHTML = html;
+            });
+        }
 
-function renderComments(comments) {
-    if (!comments) return '<p class="text-xs italic text-stone-400">Chưa có bình luận nào.</p>';
-    return Object.values(comments).map(c => `
-        <div class="bg-stone-50 p-3 rounded-sm">
-            <p class="text-[10px] font-bold text-stone-900">${c.author} <span class="font-normal text-stone-400 ml-2">${c.date}</span></p>
-            <p class="text-sm text-stone-600 mt-1">${c.text}</p>
-        </div>
-    `).join('');
-}
+        function openPostDetail(postId) {
+            database.ref('forum_posts/' + postId).once('value', (snapshot) => {
+                const p = snapshot.val();
+                const user = JSON.parse(localStorage.getItem('user'));
+                const likes = p.likes ? Object.keys(p.likes).length : 0;
 
-function handleLike(postId) {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if(!user) return alert("Vui lòng đăng nhập để thích bài viết!");
-    
-    // Lưu lượt thích theo tên người dùng để không bị trùng
-    database.ref('forum_posts/' + postId + '/likes/' + user.displayName).set(true);
-    closeDetail(); // Đóng để cập nhật lại giao diện (hoặc viết hàm update nhỏ hơn)
-    openPostDetail(postId);
-}
+                const detailHtml = `
+                    <div id="post-detail-modal" class="modal active">
+                        <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative rounded-sm">
+                            <button onclick="closeDetail()" class="absolute top-4 right-4 text-2xl">&times;</button>
+                            <span class="text-[10px] font-bold text-red-700 uppercase">${p.role}</span>
+                            <h2 class="text-3xl font-serif my-4">${p.title}</h2>
+                            <p class="text-stone-600 leading-relaxed whitespace-pre-wrap mb-8">${p.content}</p>
+                            
+                            <div class="border-t pt-4 flex items-center justify-between">
+                                <button onclick="handleLike('${postId}')" class="text-xs font-bold uppercase p-2 hover:text-red-700">❤️ Thích (${likes})</button>
+                                <span class="text-[10px] text-stone-400">${p.author} - ${p.date}</span>
+                            </div>
 
-function sendComment(postId) {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const text = document.getElementById('cmt-input').value;
-    if(!text) return;
+                            <div class="mt-8 border-t pt-6">
+                                <h4 class="font-serif mb-4">Bình luận</h4>
+                                <div id="modal-comments" class="space-y-3 mb-6">
+                                    ${renderComments(p.comments)}
+                                </div>
+                                ${user ? `
+                                    <div class="flex gap-2">
+                                        <input type="text" id="cmt-input" placeholder="Viết phản hồi..." class="flex-1 border-b text-sm outline-none py-2">
+                                        <button onclick="sendComment('${postId}')" class="bg-black text-white px-4 py-2 text-[10px] uppercase font-bold">Gửi</button>
+                                    </div>
+                                ` : '<p class="text-[10px] italic">Đăng nhập để bình luận</p>'}
+                            </div>
+                        </div>
+                    </div>`;
+                document.getElementById('post-detail-container').innerHTML = detailHtml;
+            });
+        }
 
-    const newComment = {
-        author: user.displayName,
-        text: text,
-        date: new Date().toLocaleTimeString('vi-VN') + " " + new Date().toLocaleDateString('vi-VN')
-    };
+        function renderComments(comments) {
+            if(!comments) return '<p class="text-[10px] text-stone-400">Chưa có thảo luận nào.</p>';
+            return Object.values(comments).map(c => `
+                <div class="bg-stone-50 p-3 rounded-sm">
+                    <p class="text-[10px] font-bold">${c.author} <span class="font-normal text-stone-400 ml-2">${c.date}</span></p>
+                    <p class="text-sm text-stone-600 mt-1">${c.text}</p>
+                </div>`).join('');
+        }
 
-    database.ref('forum_posts/' + postId + '/comments').push(newComment)
-    .then(() => {
-        document.getElementById('cmt-input').value = "";
-        // Cập nhật danh sách bình luận ngay lập tức
-        closeDetail();
-        openPostDetail(postId);
-    });
-}
+        function handleLike(id) {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if(!user) return alert("Cần đăng nhập!");
+            database.ref('forum_posts/' + id + '/likes/' + user.uid).set(true);
+            setTimeout(() => openPostDetail(id), 200);
+        }
 
-function closeDetail() {
-    const modal = document.getElementById('post-detail-modal');
-    if(modal) modal.remove();
-}
+        function sendComment(id) {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const text = document.getElementById('cmt-input').value;
+            if(!text) return;
+            const comment = {
+                author: user.displayName,
+                text: text,
+                date: new Date().toLocaleDateString('vi-VN')
+            };
+            database.ref('forum_posts/' + id + '/comments').push(comment).then(() => {
+                openPostDetail(id);
+            });
+        }
+
+        function closeDetail() { document.getElementById('post-detail-container').innerHTML = ''; }
+
+        function savePost() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            if(!title || !content) return alert("Vui lòng điền đủ!");
+
+            const newPost = {
+                title, content, author: user.displayName, role: "Thành viên",
+                date: new Date().toLocaleDateString('vi-VN'),
+                timestamp: Date.now()
+            };
+            database.ref('forum_posts').push(newPost).then(() => {
+                document.getElementById('postTitle').value = "";
+                document.getElementById('postContent').value = "";
+                alert("Đăng bài thành công!");
+            });
+        }
+
+        // Giả lập Login cho mục đích chạy thử (Bạn thay bằng code Firebase Auth thật)
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = { displayName: "Khách Quý", uid: "user_" + Date.now() };
+            localStorage.setItem('user', JSON.stringify(user));
+            location.reload();
+        }
+
+        function logout() { localStorage.removeItem('user'); location.reload(); }
+
+        window.onload = () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if(user) {
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('user-section').classList.remove('hidden');
+                document.getElementById('display-name').innerText = user.displayName;
+                document.getElementById('forum-post-area').classList.remove('hidden');
+                document.getElementById('forum-auth-notice').classList.add('hidden');
+            }
+            loadPosts();
+        };
     </script>
 </body>
 </html>
